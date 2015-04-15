@@ -126,7 +126,7 @@ D3=D3a;
 D3u=D3;
 
 for k=1:length(segs)-1;
-    in_bin=D2.pulse>=segs(k) & D2.pulse <=segs(k+1);
+    in_bin=D2.pulse>=segs(k) & D2.pulse <segs(k+1);
     D3a.med(k)=median(D2.h(in_bin));
     D3a.centroid(k)=mean(D2.h(in_bin));
     D3a.count(k)=sum(in_bin);
