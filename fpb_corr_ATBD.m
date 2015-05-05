@@ -3,8 +3,8 @@ c=3e8;
 
 t=-2/c*dh;
 
-dt=2e-12; % approx 1/3  mm
-t_WF=min(t):dt:(max(t)+1e-9);
+dt=1e-11; % approx 1/3  mm
+t_WF=(min(t)-dt/2):dt:(max(t)+1e-9);
 t_WF=t_WF(:);
 
 tbin=floor((t-t_WF(1))/dt)+2; % the +2 is: 1 for 1-indexed array, 1 for the timing of the event vs. the time of the bin  
