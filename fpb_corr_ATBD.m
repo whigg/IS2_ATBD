@@ -1,16 +1,18 @@
-function [med, centroid, count, t_WF_full, N0_full, N_fpb_corr, sigma_med, sigma_centroid]=fpb_corr_ATBD(dh, chan, pulse, N_chan, N_pulses, t_dead, skip_fpb_corr)
+function [med, centroid, count, t_WF_full, N0_full, N_fpb_corr, sigma_med, sigma_centroid]=fpb_corr_ATBD(dh, chan, pulse, N_chan, N_pulses, t_dead, skip_fpb_corr,dt)
 c=3e8;
 
 t=-2/c*dh;
 
-dt=1e-11; % approx 1/3  mm
+if ~exist('dt','var')
+    dt=100e-12; %approx 1.5 cm
+end
 
 % calculate a full-waveform time vector:
 t_WF_full=(min(t)-dt/2):dt:(max(t)+1e-9);
 t_WF_full=t_WF_full(:);
 
 % calc the signal rate, in photons per pulse per chan per time bin as a fn of time
-N0_full=histc(t, t_WF_full)/N_pulses/N_chan;  
+N0_full=my_histc(t, t_WF_full)/N_pulses/N_chan;  
 
 % make sure nothing funny happens at the start and end of the WF
 N0_full(1)=0; 
