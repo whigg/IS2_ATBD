@@ -46,7 +46,7 @@ WF.t=WF.t-sum(WF.t.*WF.p)./sum(WF.p);
 H_trunc=4;
 
 % N.B.  This can be run as a parfor if you have the parallel tool box
-for kk=1:numel(R)
+parfor kk=1:numel(R)
         if R(kk) > 0
             % generate a synthetic waveform that matches the spread transmit pulse
             t_r=R(kk)/1.5e8;
