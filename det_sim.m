@@ -52,6 +52,7 @@ for k=1:length(f)
     D2.(f{k})=cat(1, D.(f{k}));
 end
 
+
 %-----------------------------------------------
 function D=sub_sim(DEM, x0, params, ATM_xmit)
 
@@ -64,7 +65,7 @@ end
 D0=struct('xground',[],'pulse_num', [], 'x0', [],'SigNoise', [], 'z0', []);
 for k=1:length(x0);
     % Poisson-distributed N
-    N_sig=round(sum(rand(ceil(10*params.N_per_pulse),1)<(1/10)).*ATM_xmit(k));
+    N_sig=poisson_rv(params.N_per_pulse*ATM_xmit(k), 1);  
     % random footprint location
     D0(k).xground=x0(k)+(randn(N_sig,1)+1i*randn(N_sig,1))*params.sigma_x;    
     D0(k).pulse_num=k+zeros(N_sig,1);
@@ -72,7 +73,7 @@ for k=1:length(x0);
     D0(k).SigNoise=true(N_sig,1);
     
     N_noise=params.NoiseRate*params.H_window/(params.c/2);
-    NoiseCount=sum(rand(ceil(10*N_noise),1)<(1/10));
+    NoiseCount=poisson_rv(N_noise,1);
     if NoiseCount>0;
         D0(k).xground=[D0(k).xground; x0(k)+zeros(NoiseCount,1)];
         D0(k).pulse_num=[D0(k).pulse_num; k+zeros(NoiseCount,1)];
@@ -207,4 +208,14 @@ for k=1:length(u_DS);
     hit_all(these)=hit;
 end
 det=real(DS);
+
+%_____________________________________________
+function D=subset_image(D, XR, YR)
+
+rows=D.y >=YR(1) & D.y <= YR(2);
+cols=D.x >= XR(1) & D.x <= XR(2);
+
+D.x=D.x(cols); 
+D.y=D.y(rows); 
+D.z=D.z(rows, cols);
 
