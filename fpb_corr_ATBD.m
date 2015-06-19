@@ -23,6 +23,15 @@ N_dt_bins=floor(t_dead/dt)-1;
 N_per_dt=conv(N0_full,  [zeros(N_dt_bins,1); ones(N_dt_bins,1)],'same');
 
 % only calculate the gain for bins for which the PH/deadtime rate is greater than 0.1 
+if ~any(N_per_dt>0.05)
+    % generate a default gain estimate for the full waveform
+    % If we haven't calculated a gain value, assume it's equal to 1
+    gain_full=ones(size(N0_full));
+     
+    N_fpb_corr=N0_full./gain_full*N_pulses*N_chan;
+    [med, centroid, count, sigma_med, sigma_centroid]=calc_stats(N0_full*N_pulses*N_chan, gain_full, t_WF_full*(-1.5e8) );
+    return
+end
 TR=range(t_WF_full(N_per_dt>0.05))+[-1 1]*t_dead;
 gain_calc_bins=t_WF_full >=TR(1) & t_WF_full <= TR(2);
 t_WF=t_WF_full(gain_calc_bins);
