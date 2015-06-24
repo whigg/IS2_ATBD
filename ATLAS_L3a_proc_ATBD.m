@@ -1,5 +1,28 @@
 function [D3]=ATLAS_L3a_proc_ATBD(D2, params, which_L)
 
+% ATLAS_L3a_proc_ATBD(D2, params, which_L)
+% Inputs: 
+% D2: a 2-element structure array containing two beams worth of L2b
+%    ICESat-2 data
+%    must contain, at minimum, fields:
+%        x_RPT: along-track coordinate
+%        h: surface height
+%        detected: whether each photon was detected (set to all true if no
+%        detector model used
+%         ...probably others...
+% params: a 2-element (one per beam structure containing metadata 
+%    about the D2 data and the L2->L3 processing
+%      must contain, at minimum, fields:
+%        WF: A structure array describing the transmit WF, with fields:
+%            t: photon-bin time
+%            p: mean power in the bin
+% which_L : An optional parameter specifying the segment to be processed.
+%    If specified, only the segment centered on which_L will be processed.
+%    This is useful for plotting and debugging, can be ignored for batch 
+%    processing.
+
+
+
 for k=1:length(params); 
     params(k).sigma_pulse=diff(wf_percentile(params(k).WF.t, params(k).WF.p, [0.16 .84]))/2;
 end

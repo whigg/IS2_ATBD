@@ -41,8 +41,7 @@ if exist('DOPLOT','var') && DOPLOT
         good=poisson_p_table(D3.N_noise(:,k), D3.N_window(:,k) ) > 0.95;
         plot([1; 1]*D3.x_RPT(good,k)'+[-20; 20]*ones(size(D3.x_RPT(good,k)')), [1; 1]*D3.h_LI(good,k)'+[-20; 20]*D3.dh_fit_dx(good,k)','r-','linewidth', 2)
         plot([1; 1]*D3.x_RPT(good,1)'+[-20; 20]*ones(size(D3.x_RPT(good,k)')), [1; 1]*D3.h_LI(good,k)'+[-20; 20]*D3.dh_fit_dx(good,k)'-[1; 1]*D3.W_surface_window_final(good,k)'/2,'g-','linewidth', 2)
-        plot([1; 1]*D3.x_RPT(good,1)'+[-20; 20]*ones(size(D3.x_RPT(good,k)')), [1; 1]*D3.h_LI(good,k)'+[-20; 20]*D3.dh_fit_dx(good,k)'+[1; 1]*D3.W_surface_window_final(good,k)'/2,'g-','linewidth', 2)
-        
+        plot([1; 1]*D3.x_RPT(good,1)'+[-20; 20]*ones(size(D3.x_RPT(good,k)')), [1; 1]*D3.h_LI(good,k)'+[-20; 20]*D3.dh_fit_dx(good,k)'+[1; 1]*D3.W_surface_window_final(good,k)'/2,'g-','linewidth', 2)       
     end
     
     
