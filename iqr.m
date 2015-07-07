@@ -12,6 +12,13 @@ if min(size(x))==1 & size(x,2)>size(x,1);
    x=x(:);
 end
 
+if length(x)==1
+    [low, high]=deal(x);
+    if nargout==1;
+        low=0;
+    end
+    return
+end
 f=0.5+[-f/2;f/2];
 
 [x,ind]=sort(x);

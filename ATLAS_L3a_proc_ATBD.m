@@ -86,21 +86,20 @@ for k0=1:length(L0);
         if isfield(params(kB),'skip') &&  params(kB).skip;
            els=[];
         end
-        
-        D3(k0, kB).N_initial=sum(els);
-        if D3(k0, kB).N_initial==0
-            ybar(kB)=NaN;
-            continue
-        end
-        
-        
+     
         D2sub_all(kB)=index_struct(D2(kB), els);
         if ~skip_fpb_corr
             D2sub(kB)=index_struct(D2sub_all(kB), D2sub_all(kB).detected==1);
         else
             D2sub(kB)=D2sub_all(kB);
         end
-                
+              
+        D3(k0, kB).N_initial=sum(els);
+        if D3(k0, kB).N_initial==0
+            ybar(kB)=NaN;
+            continue
+        end  
+        
         D3(k0, kB)=ATLAS_LS_fit(D2sub(kB), L0(k0), [0, 0], 1, params(kB), D3(k0, kB), struct('initial',true,'Nsigma',3, 'Hwin_min', 10)); % get initial h_med
         D3(k0, kB).h_initial=D3(k0, kB).h_med;
         if isfield(D2sub,'y_RPT');
