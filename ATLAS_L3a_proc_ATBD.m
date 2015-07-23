@@ -65,10 +65,12 @@ else
     skip_fpb_corr=false;
 end
 
-D3_fields={'track','beam', 'BGR','h_initial','W_surface_window_final', ...
+D3_fields={ 'height_quality_flag', 'h_expected_rms', 'sigma_geo_AT', 'sigma_geo_XT', ...
+    'RGT','GT','PT','cycle','orbit_number','seg_count', ...
+    'track','beam', 'BGR','h_initial','W_surface_window_final', ...
     'dh_fit_dx', 'dh_fit_dy', 'h_robust_spread', 'h_rms','h_mean','sigma_h_fit','h_med', ...
-    'sigma_dh_fit_dx', 'fpb_error' ,'fpb_med_corr','fpb_mean_corr', ...
-    'N_initial', 'N_noise', 'N_window','fpb_N_corr', 'sigma_photon_est', ...
+    'sigma_dh_fit_dx', 'fpb_error' ,'fpb_med_corr','fpb_mean_corr', 'med_r_fit', ...
+    'N_initial', 'N_noise', 'n_fit_photons','fpb_N_corr', 'sigma_photon_est', ...
     'TX_med_corr','TX_mean_corr', 'h_LI', 'z0','m0', 'x_RPT','y_RPT', ...
     'fpb_med_corr_sigma','fpb_mean_corr_sigma', ...
     'first_seg_pulse','N_seg_pulses','time'};
@@ -76,6 +78,7 @@ D3_fields={'track','beam', 'BGR','h_initial','W_surface_window_final', ...
 for kf=1:length(D3_fields);
     D3_empty.(D3_fields{kf})=NaN;
 end
+D3_empty.height_quality_flag=uint8(0);
 
 D3=repmat(D3_empty, [length(L0),2]);
 tic
@@ -95,7 +98,8 @@ for k0=1:length(L0);
         end
               
         D3(k0, kB).N_initial=sum(els);
-        if D3(k0, kB).N_initial==0
+        if D3(k0, kB).N_initial<10
+            D3(k0, kB).height_quality_flag=bitor(D3(k0, kB).height_quality_flag, 1);
             ybar(kB)=NaN;
             continue
         end  
@@ -123,10 +127,21 @@ for k0=1:length(L0);
         end
          
         [D3(k0, kB), r, els ]=ATLAS_LS_fit(D2sub(kB), L0(k0), h_and_y_other_beam, max_ground_bin_iterations, params(kB), D3(k0, kB), struct('initial',false,'Nsigma',3,'Hwin_min', 4));
-  
-        if sum(els)<10; continue; end
-        D3(k0, kB).N_window=length(r);
-        [D3(k0, kB).fpb_med_corr, D3(k0, kB).fpb_mean_corr, D3(k0, kB).fpb_N_corr, t_WF, N_WF, N_WF_corr, D3(k0, kB).fpb_med_corr_sigma, D3(k0, kB).fpb_mean_corr_sigma]=fpb_corr_ATBD(r, D2sub(kB).channel(els), D2sub(kB).pulse_num(els), params(kB).N_det, 57, params(kB).t_dead, skip_fpb_corr, 100e-12);
+        D3(k0, kB).med_r_fit=median(r);
+        % check PE distribution
+        if diff(range(D2sub(kB).x_RPT))<17
+            D3(k0, kB).h_LI=median(D2sub(kB).h);
+            D3(k0, kB).height_quality_flag=bitor(D3(k0, kB).height_quality_flag, 2);
+        end
+        
+        if sum(els)<10; 
+            D3(k0, kB).height_quality_flag=bitor(D3(k0, kB).height_quality_flag, 1); 
+            continue; end
+        D3(k0, kB).n_fit_photons=length(r);
+        [D3(k0, kB).fpb_med_corr, D3(k0, kB).fpb_mean_corr, D3(k0, kB).fpb_N_corr, t_WF, N_WF, N_WF_corr, D3(k0, kB).fpb_med_corr_sigma, D3(k0, kB).fpb_mean_corr_sigma, minGain]=...
+            fpb_corr_ATBD(r, D2sub(kB).channel(els), D2sub(kB).pulse_num(els), params(kB).N_det, 57, params(kB).t_dead, skip_fpb_corr, 100e-12);
+        % check if gain correction is valid
+        if minGain < 1/(2*params(kB).N_det); D3(k0, kB).height_quality_flag=bitor(D3(k0, kB).height_quality_flag, 8); end
         D3(k0, kB).N_noise=median(D2sub(kB).BGR)*D3(k0, kB).W_surface_window_final/1.5e8*57;
         sigma_hat_robust=robust_peak_width_from_hist(t_WF, N_WF_corr, D3(k0, kB).N_noise, D3(k0, kB).W_surface_window_final*[-0.5 0.5]/1.5e8);
         
@@ -160,12 +175,23 @@ for k0=1:length(L0);
     if ~isfinite(dh_fit_dy); dh_fit_dy=0; end
     for kB=1:2;
         D3(k0, kB).dh_fit_dy=dh_fit_dy;         
-        N_sig=max(0,D3(k0, kB).N_window-D3(k0, kB).N_noise);
+        N_sig=max(0,D3(k0, kB).n_fit_photons-D3(k0, kB).N_noise);
         sigma_signal=sqrt((D3(k0, kB).dh_fit_dy.^2+D3(k0, kB).dh_fit_dx.^2)*params(kB).sigma_x.^2 + (params(kB).sigma_pulse*1.5e8).^2);
-        D3(k0, kB).sigma_photon_est=sqrt((D3(k0, kB).N_noise*(D3(k0, kB).W_surface_window_final*.287).^2+N_sig*sigma_signal.^2)/D3(k0, kB).N_window);
+        D3(k0, kB).sigma_photon_est=sqrt((D3(k0, kB).N_noise*(D3(k0, kB).W_surface_window_final*.287).^2+N_sig*sigma_signal.^2)/D3(k0, kB).n_fit_photons);
         sigma_per_photon=max(D3(k0, kB).sigma_photon_est, D3(k0, kB).h_robust_spread);
         D3(k0, kB).sigma_h_fit=D3(k0, kB).sigma_h_fit*sigma_per_photon;
         D3(k0, kB).sigma_dh_fit_dx=D3(k0, kB).sigma_dh_fit_dx*sigma_per_photon;     
+        D3(k0, kB).sigma_h_LI=max(D3(k0, kB).sigma_h_fit, D3(k0, kB).fpb_med_corr_sigma);
+        
+        % add in dummy parameter values
+        D3(k0, kB).RGT=params(kB).RGT;
+        D3(k0, kB).GT=params(kB).GT;
+        D3(k0, kB).PT=params(kB).PT;
+        D3(k0, kB).cycle=params(kB).cycle;
+        D3(k0, kB).orbit_number=params(kB).orbit_number;
+        
+        
+        
     end
     if mod(k0, 250)==0; 
         disp([num2str(k0) ' out of ' num2str(length(L0))]);

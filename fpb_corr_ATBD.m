@@ -1,4 +1,4 @@
-function [med, centroid, count, t_WF_full, N0_full, N_fpb_corr, sigma_med, sigma_centroid]=fpb_corr_ATBD(dh, chan, pulse, N_chan, N_pulses, t_dead, skip_fpb_corr,dt)
+function [med, centroid, count, t_WF_full, N0_full, N_fpb_corr, sigma_med, sigma_centroid, minGain]=fpb_corr_ATBD(dh, chan, pulse, N_chan, N_pulses, t_dead, skip_fpb_corr,dt)
 c=3e8;
 
 t=-2/c*dh;
@@ -30,6 +30,7 @@ if ~any(N_per_dt>0.05)
      
     N_fpb_corr=N0_full./gain_full*N_pulses*N_chan;
     [med, centroid, count, sigma_med, sigma_centroid]=calc_stats(N0_full*N_pulses*N_chan, gain_full, t_WF_full*(-1.5e8) );
+    minGain=1;
     return
 end
 TR=range(t_WF_full(N_per_dt>0.05))+[-1 1]*t_dead;
@@ -110,6 +111,7 @@ end
 % If we haven't calculated a gain value, assume it's equal to 1
 gain_full=ones(size(N0_full));
 gain_full(gain_calc_bins)=gain;
+minGain=min(gain_full);
 
 N_fpb_corr=N0_full./gain_full*N_pulses*N_chan;
 [med, centroid, count, sigma_med, sigma_centroid]=calc_stats(N0_full*N_pulses*N_chan, gain_full, t_WF_full*(-1.5e8) );
