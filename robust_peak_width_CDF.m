@@ -18,11 +18,16 @@ N_sig=length(x)-N_BG;
 xs=sort(x); xs=xs(:);
 C=0.5:length(x)-0.5; C=C(:);
 
-i0=find(C<0.16*N_sig + (xs-XR(1))*BGR, 1, 'last'); 
+%new October 2015: switch to P vals of .25 and .75, include correction
+%based on the erfinv 
+P_vals=[.25 .75];
+scale_factor=diff(erfinv(P_vals));
+
+i0=find(C<P_vals(1)*N_sig + (xs-XR(1))*BGR, 1, 'last'); 
 if isempty(i0); i0=1;end
-i1=find(C>0.84*N_sig + (xs-XR(1))*BGR, 1, 'first');
+i1=find(C>P_vals(2)*N_sig + (xs-XR(1))*BGR, 1, 'first');
 if isempty(i1); i1=length(x);end
-sigma_hat=diff(xs([i0 i1]))/2;
+sigma_hat=diff(xs([i0 i1]))/2/scale_factor;
 
 if nargout==2;
     i0=find(C<0.5*N_sig + (xs-XR(1))*BGR, 1, 'last');

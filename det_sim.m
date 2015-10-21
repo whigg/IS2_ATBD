@@ -5,7 +5,7 @@ function D2=det_sim(DEM, x0, params, ATM_xmit)
 %                                     y: row y coordinate
 %                                     z: surface height
 %
-% x0: pulse center coordinates
+%          x0: pulse center coordinates
 % params: a sturct with simulation parameter fields:
 %      'roughness', surface roughness, meters
 %      'sigma_x',  footprint width, meters
@@ -20,7 +20,7 @@ function D2=det_sim(DEM, x0, params, ATM_xmit)
 % ATM_xmit: optional value giving the atmospheric attenuation (1 means no attenuation)
 %
 % outputs: D2: struct array giving ATL03-type output data 
-%    '
+%    
 
 
 % break the simulation into bite-sized pieces (OTW the inefficiency in appending data becomes the driving cost)
@@ -38,7 +38,12 @@ end
 for k=1:length(sub_ind)-1;
     x0_sub=x0(sub_ind(k):sub_ind(k+1)-1);
     if isstruct(DEM)
-        DEM_sub=subset_image(DEM, range(real(x0_sub))+[-200 200], range(imag(x0_sub))+[-200 200]);
+        this_W=200;
+        DEM_sub=subset_image(DEM, range(real(x0_sub))+[-1 1]*this_W, range(imag(x0_sub))+[-1 1]*this_W);
+        while this_W < 2e4 && (isempty(DEM_sub.x) || isempty(DEM_sub.y))
+            this_W=this_W*2;
+            DEM_sub=subset_image(DEM, range(real(x0_sub))+[-1 1]*this_W, range(imag(x0_sub))+[-1 1]*this_W);
+        end
     else
         DEM_sub=DEM;
     end
@@ -55,7 +60,6 @@ end
 
 %-----------------------------------------------
 function D=sub_sim(DEM, x0, params, ATM_xmit)
-
 
 if ~isfield(params,'N_channels')
     params.N_channels=params.N_det;
@@ -131,8 +135,6 @@ D.h=-D.t_ph*params.c/2;
 D=index_struct(D, ind);
 
 D.BGR=zeros(size(D.x0))+params.NoiseRate;
-
-D.x_LC=D.x0;
 
 [D.detected, D.channel]=detect_with_deadtime(D.t_ph, D.pulse_num, params.N_channels, params.t_dead, length(x0));
 

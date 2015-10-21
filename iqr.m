@@ -12,6 +12,11 @@ if min(size(x))==1 & size(x,2)>size(x,1);
    x=x(:);
 end
 
+if isempty(x)
+    low=NaN; high=NaN;
+    return
+end
+
 if length(x)==1
     [low, high]=deal(x);
     if nargout==1;

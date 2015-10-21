@@ -119,10 +119,6 @@ D2=rmfield(D2, 'pulse_num');
 %-------------------------------------------------------
 function [D3_corr, D3_uncorr, D3_no_fpb]=correct_data(D2, params)
 
-if ~isfield(params,'dt_hist_bin')
-    params.dt_hist_bin=1e-12;
-end
-
 segs=1:58:max(D2.pulse);
 [D3_no_fpb.med, D3_no_fpb.centroid, D3_no_fpb.count]=deal(NaN(length(segs)-1,1));
 D3_corr=D3_no_fpb;

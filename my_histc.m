@@ -1,12 +1,16 @@
 function count=my_histc(x, bins)
 x=sort(x);
+bins=bins(:);
 % case 1: bins are of equal spacing
- if abs(max(diff(bins))-min(diff(bins)))/mean(diff(bins)) > 10*eps
+% NEW: October 2015: Better check on bin width
+ if abs(max(diff(bins))-min(diff(bins)))/mean(diff(bins)) < 1e-9
     ind=round((x-bins(1))/(bins(2)-bins(1)))+1;
     [bin_num, ia]=unique(ind,'first');
     [~, ib]=unique(ind,'last');
     count=zeros(size(bins));
-    count(bin_num)=ib-ia+1;
+    % NEW: October 2015: handle single-event bins
+    good=isfinite(bin_num);
+    count(bin_num(good))=ib(good)-ia(good)+1;
 else
     count=zeros(size(bins));
     bin_edges=[bins(1)-(bins(2)-bins(1))/2; 
